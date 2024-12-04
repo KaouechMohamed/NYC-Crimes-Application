@@ -28,8 +28,8 @@ This work relies on [NYPD Complaint Data Historic Dataset]. This dataset include
 ## Notebooks
 
 Different notebooks are provided for :
-- [Data cleaning & Exploratory Data Analysis]()
-- [data Preparation & Modeling]()
+- [Data cleaning & Exploratory Data Analysis](https://github.com/KaouechMohamed/NYC-Crimes-Application/blob/main/research/EDA.ipynb)
+- [data Preparation & Modeling](https://github.com/KaouechMohamed/NYC-Crimes-Application/blob/main/research/Modeling.ipynb)
 
 ## Technologies
 
@@ -52,8 +52,10 @@ For data cleaning, EDA and modeling:
 
 To start the application you need to install Docker on your machine and launch the following commands:
 ```sh
-docker build -t NYC-Crimes-app .
-docker run -p 8501:8501 NYC-Crimes-app
+docker build -t nyc-crimes-app .
+```
+```sh
+docker run -p 8501:8501 nyc-crimes-app
 ```
 
 ## User Interface
