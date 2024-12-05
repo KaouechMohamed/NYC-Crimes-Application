@@ -1,6 +1,6 @@
 import streamlit as st
 import folium
-from streamlit_folium import st_folium,folium_static
+from streamlit_folium import st_folium, folium_static
 from geopy.geocoders import Nominatim
 from datetime import datetime
 import service as service
@@ -47,7 +47,7 @@ def get_precinct_and_borough(lat, lon):
     precinct_gdf = gpd.read_file(shapefile)
     borough_gdf = gpd.read_file(borough_sh)
     point = Point(lon, lat)
-    point2=Point(lon_lat_to_utm(lon, lat))
+    point2 = Point(lon_lat_to_utm(lon, lat))
     precinct = None
     borough = None
     for _, row in precinct_gdf.iterrows():
@@ -56,7 +56,7 @@ def get_precinct_and_borough(lat, lon):
     for _, row in borough_gdf.iterrows():
         if row['geometry'].contains(point2):
             borough = row['BoroName']
-            break  
+            break
     return precinct, borough
 
 
@@ -66,90 +66,128 @@ def generate_base_map(default_location=[40.704467, -73.892246], default_zoom_sta
                           min_lon=-74.25909008, max_lat=40.91617849, max_lon=-73.70018092)
     return base_map
 
-def get_user_information(k1,k2,k3):
-    with st.sidebar:
-        st.header("Enter your information")
-        gender = st.radio("Gender:", ["Male", "Female"], key=k1)
-        race = st.selectbox("Race:", ['WHITE', 'WHITE HISPANIC', 'BLACK', 'ASIAN / PACIFIC ISLANDER', 'BLACK HISPANIC',
-                                      'AMERICAN INDIAN/ALASKAN NATIVE', 'OTHER'], key=k2)
-        age = st.slider("Age:", 0, 120, key="age")
-        date = st.date_input("Date:", datetime.now(), key="date")
-        hour = st.slider("Hour:", min_value=0, max_value=24, key="hour")
-        place = st.radio("Place:", ("In park", "In public housing", "In station"), key=k3)
+def get_user_information():
+    with st.container():
+        st.header("Enter your information 📋")
+
+        gender = st.radio("Gender 👤", ["Male", "Female"])
+        race = st.selectbox("Race 🌍", ['WHITE', 'WHITE HISPANIC', 'BLACK', 'ASIAN / PACIFIC ISLANDER', 'BLACK HISPANIC',
+                                     'AMERICAN INDIAN/ALASKAN NATIVE', 'OTHER'])
+        age = st.slider("Age 🧑‍🦳:", 0, 120)
+        date = st.date_input("Date 🗓️:", datetime.now())
+        hour = st.slider("Hour 🕒:", min_value=0, max_value=24)
+        place = st.radio("Place 📍", ("In park", "In public housing", "In station"))
+
     return gender, race, age, date, hour, place
 
 
 def get_user_input_method():
-    return st.radio("Choose input method:", ["Select destination on Map","Type your destination"])
+    return st.radio("input method 📲", ["Select destination on Map 🗺️"])
 
 st.set_page_config(
-    page_title="NYC Crime Prediction",
-    page_icon="🌍", 
+    page_title="NYC Crime Prediction 🚔",
+    page_icon="🌍",
     layout="wide",  
-    initial_sidebar_state="expanded", 
+    initial_sidebar_state="collapsed",  # Sidebar is hidden
+)
+st.markdown(
+    """
+    <style>
+        /* Set background image and make it fixed */
+        .stApp {
+            background-size: cover;
+            position: relative;
+            height: 100vh;
+        }
+
+        /* Add a transparent overlay on top of the background */
+        .stApp::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);  /* Dark transparent overlay */
+            z-index: -1;
+        }
+
+        /* Styling for the main content container with some transparency */
+        .stContainer {
+            background: rgba(255, 255, 255, 0.9);  /* Slight transparency */
+            padding: 20px;
+            border-radius: 15px;
+            z-index: 10;
+        }
+
+        /* Ensuring that the text is white and readable */
+        .stContainer h1, .stContainer h2, .stContainer p {
+            color: #FFFFFF; /* White text */
+        }
+       
+        /* Adding specific padding for better readability */
+        .stContainer .text-box {
+            padding: 15px;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.6);  /* Dark transparent background for text */
+            color: white;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
-st.title("New York Crime Prediction")
+# Main Container for Centering
+with st.container():
+    st.title("New York Crime Prediction 🚔🌆")
+
+    # Application description centered
+    st.markdown("""
+        This application uses machine learning models to predict the likelihood of a crime happening at a specific location in **New York City**.
+        Whether you're planning to visit NYC or just curious about the safety of a certain area, this tool can help you predict the potential risks based on various inputs, such as:
+   
+        - **Age, Gender, Race**: Demographic information that influences crime trends.
+        - **Time**: The day and hour you plan to be out in the city.
+        - **Place**: Whether you are in a park, public housing, or a station.
+       
+        Simply enter your destination and other relevant details, and the app will predict what kind of crime you may be more likely to be a victim of.
+       
+        Stay safe and informed! 🌆🚔
+    """)
+
+# User Input Method
 input_method = get_user_input_method()
-gender, race, age, date, hour, place=get_user_information("gender","race","place")
+gender, race, age, date, hour, place = get_user_information()
 
+# Columns for Better Layout
+with st.container():
+    col1, col2, col3 = st.columns([1, 2, 1])  # Center the columns
+    with col2:
+        pred = None
+        crimes = None
+        if input_method == "Select destination on Map 🗺️":
+            base_map = generate_base_map()
+            base_map.add_child(folium.LatLngPopup())
+            map = st_folium(base_map, height=350, width=700)
+            if map['last_clicked'] is not None:
+                data = get_pos(map['last_clicked']['lat'], map['last_clicked']['lng'])
+                if data is not None:
+                    st.write(data)
 
-if input_method == "Type your destination":
-    destination = st.text_input("Enter your destination in New York City:")
-    _, col, _ = st.columns(3)
-    with col:
-        predict = st.button("Predict", key="predict")
-    if predict:
-        coordinates = get_coordinates(destination)
-        if coordinates:
-            lat=coordinates[0]
-            long=coordinates[1] 
-            precinct,borough=get_precinct_and_borough(lat, long)
-            if borough:        
-                st.success(f"Coordinates for {destination}: {coordinates}")
-                st.success(f'precinct = {precinct},borough ={borough} ')
-                base_map = folium.Map(location=coordinates, zoom_start=15)
-                folium.Marker(location=coordinates, popup=destination).add_to(base_map)
-                folium_static(base_map)
-                X = service.create_df(date, hour, lat, long, place, age, race, gender, precinct, borough)
-                pred, crimes = service.predict(X)
-                st.markdown(f"You are likely to be a victim of a: **{pred}** crime")
-                st.markdown(f"#### Some of the crimes types are the following: ")
-                st.markdown(crimes)
-            else:
-                st.error("Select a destination in NYC")
-
-elif input_method == "Select destination on Map":
-    base_map = generate_base_map()
-    base_map.add_child(folium.LatLngPopup())
-    map = st_folium(base_map, height=350, width=700)
-    if map['last_clicked'] is not None:
-        data = get_pos(map['last_clicked']['lat'], map['last_clicked']['lng'])
-        if data is not None:
-            st.write(data)
-
-        lat = data[0]
-        long = data[1]
-        precinct,borough=get_precinct_and_borough(lat, long)
-        if borough:
-            st.success(f"Coordinates are {lat}: {long}")
-            st.success(f'precinct = {precinct},borough ={borough} ')
-            _, col, _ = st.columns(3)
-            with col:
-                predict = st.button("Predict", key="predict")
-            if predict:
-                if lat=='' or long == '' or precinct==None :
-                    st.error("Please make sure that you selected a location on the map")    
-                    if st.button("Okay"):
-                        pass
+                lat = data[0]
+                long = data[1]
+                precinct, borough = get_precinct_and_borough(lat, long)
+                if borough:
+                    st.success(f"Coordinates are {lat}: {long} 📍")
+                    st.success(f'Precinct = {precinct}, Borough = {borough} 🏙️')
+                    if st.button("Predict 🔮", key="predict"):
+                        if lat == '' or long == '' or precinct is None:
+                            st.error("Please make sure that you selected a location on the map 📍")
+                        else:
+                            X = service.create_df(date, hour, lat, long, place, age, race, gender, precinct, borough)
+                            pred, crimes = service.predict(X)  # Predict after inputs are given
+                            st.markdown(f"You are likely to be a victim of a: **{pred}** crime ⚠️")
+                            st.markdown(f"#### Some of the crimes types are the following: ")
+                            st.markdown(crimes)
                 else:
-                    X = service.create_df(date, hour, lat, long, place, age, race, gender, precinct, borough)
-                    pred, crimes = service.predict(X)
-                    st.markdown(f"You are likely to be a victim of a : **{pred}** crime")
-                    st.markdown(f"#### Some of the crimes types are the following: ")
-                    st.markdown(crimes)
-        else:
-            st.error("Select a destination in NYC")
-    else:
-        data = None
-    
+                    st.error("Select a destination in NYC 🏙️")
