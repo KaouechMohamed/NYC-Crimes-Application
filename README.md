@@ -63,8 +63,8 @@ docker run -p 8501:8501 nyc-crimes-app
 
 
 Here's an example of the interface:
-![User Interface Example1](interface2.PNG)
-![User Interface Example2](interface1.PNG)
+![User Interface Example1](images/interface2.PNG)
+![User Interface Example2](images/interface1.PNG)
 
 
 ## Paper
