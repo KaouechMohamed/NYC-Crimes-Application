@@ -70,3 +70,10 @@ Here's an example of the interface:
 ## Paper
 
 To document our work, we wrote a research paper that is included in the [repo](https://github.com/KaouechMohamed/NYC-Crimes-Application/blob/main/docs/paper).
+
+## Credits
+This project was built by the team composed of:
+
+- Mohamed Kaouech
+- Angela Ben Frej
+- Tasnim Benhamed 
